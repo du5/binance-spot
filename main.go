@@ -1,9 +1,9 @@
 package main
 
 import (
+	"binance-spot/config"
 	"binance-spot/spot"
 	"log"
-	"maps"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -11,24 +11,6 @@ import (
 
 var (
 	Spot = spot.NewSpotClient()
-
-	postOrder = spot.BuyCryptoMap{
-		// 主流币买入
-		"BTCFDUSD": 24,
-		"ETHFDUSD": 16,
-		"BNBFDUSD": 8,
-		"SOLFDUSD": 8,
-		// 稳定资产买入
-		"PAXGUSDT": 12,
-	}
-	preOrder = spot.BuyCryptoMap{
-		// 山寨币买入
-		"SUIFDUSD":  5,
-		"LINKFDUSD": 5,
-		"HBARFDUSD": 5,
-		"AVAXFDUSD": 5,
-		"XRPFDUSD":  5,
-	}
 )
 
 func init() {
@@ -37,8 +19,6 @@ func init() {
 		log.Fatalf("Failed to load timezone America/New_York: %v", err)
 	}
 	time.Local = loc
-
-	maps.Copy(preOrder, postOrder)
 }
 
 func main() {
@@ -49,11 +29,11 @@ func main() {
 		now := time.Now()
 		h, m, s := now.Hour(), now.Minute(), now.Second()
 		if h == 13 && m == 0 && s == 0 {
-			Spot.BuyCrypto(preOrder)
+			Spot.BuyCrypto(config.Config.PreOrder)
 		}
 
 		if h == 15 && m == 30 && s == 0 {
-			Spot.BuyCrypto(postOrder)
+			Spot.BuyCrypto(config.Config.PostOrder)
 		}
 	}
 }

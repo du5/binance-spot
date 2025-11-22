@@ -1,6 +1,7 @@
 package spot
 
 import (
+	"binance-spot/config"
 	"binance-spot/tools"
 	"context"
 	"log"
@@ -12,7 +13,7 @@ import (
 var (
 	API_KEY     = os.Getenv("API_KEY")
 	SECRET_KEY  = os.Getenv("SECRET_KEY")
-	MAX_RETRIES = 15.0
+	MAX_RETRIES = config.Config.MaxRetries
 )
 
 func init() {
@@ -30,9 +31,7 @@ func NewSpotClient() *Spot {
 	return &Spot{binance.NewClient(API_KEY, SECRET_KEY)}
 }
 
-type BuyCryptoMap map[string]float64
-
-func getSymbols(buyMap BuyCryptoMap) []string {
+func getSymbols(buyMap config.BuyCryptoMap) []string {
 	symbols := make([]string, 0, len(buyMap))
 	for k := range buyMap {
 		symbols = append(symbols, k)
@@ -108,7 +107,7 @@ func (s *Spot) doByCrypto(symbol, tickSize, lotSize, bidPrice string, amount flo
 	}
 }
 
-func (s *Spot) BuyCrypto(buyMap BuyCryptoMap) {
+func (s *Spot) BuyCrypto(buyMap config.BuyCryptoMap) {
 	var (
 		symbols             = getSymbols(buyMap)
 		tickSizes, lotSizes = s.getSymbolsInfo(symbols...)
