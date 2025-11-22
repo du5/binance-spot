@@ -15,7 +15,7 @@ func RoundPriceAndQuantity(amount float64, price, tickSize, lotSize string, n fl
 	precision := int(math.Round(-math.Log10(tickSizeFloat)))       // 价格精度
 	lotSizePrecision := int(math.Round(-math.Log10(lotSizeFloat))) // 数量精度
 
-	rawPrice := priceFloat - n*tickSizeFloat
+	rawPrice := priceFloat - tickSizeFloat*math.Pow(1.6, n)
 	flooredPrice := math.Floor(rawPrice/tickSizeFloat) * tickSizeFloat
 
 	if flooredPrice <= 0 {
