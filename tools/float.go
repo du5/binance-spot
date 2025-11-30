@@ -32,7 +32,7 @@ func RoundPriceAndQuantity(amount float64, price, tickSize, lotSize string, n fl
 		qty = lotSizeFloat
 	}
 
-	for flooredPrice*qty < 5 {
+	for flooredPrice*qty < amount {
 		qty += lotSizeFloat
 	}
 
