@@ -19,6 +19,8 @@ func init() {
 		log.Fatalf("Failed to load timezone America/New_York: %v", err)
 	}
 	time.Local = loc
+
+	Spot.TestClient()
 }
 
 func main() {

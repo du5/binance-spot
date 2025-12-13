@@ -32,7 +32,22 @@ func NewSpotClient() *Spot {
 	return &Spot{binance.NewClient(API_KEY, SECRET_KEY)}
 }
 
+func (s *Spot) TestClient() {
+	_, err := s.NewWalletBalanceService().QuoteAsset("USDT").Do(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to connect to Binance API: %v", err)
+	}
+	log.Println("Successfully connected to Binance API")
+
+	timeOffset, err := s.NewSetServerTimeService().Do(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to synchronize server time: %v", err)
+	}
+	log.Printf("Synchronized server time with offset: %d ms", timeOffset)
+}
+
 func getSymbols(buyMap config.BuyCryptoMap) (keys []string, orders map[string]*order) {
+	orders = make(map[string]*order)
 	for symbol, amount := range buyMap {
 		orders[symbol] = &order{symbol: symbol, amount: amount}
 		keys = append(keys, symbol)
