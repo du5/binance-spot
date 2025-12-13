@@ -1,6 +1,6 @@
 {
     "max_retries": 15.0,
-    "tick_size_power": 1.6,
+    "tick_size_power": 1.05,
     "pre_order": {
         "BTCFDUSD": 24.0,
         "ETHFDUSD": 16.0,

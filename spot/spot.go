@@ -6,6 +6,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/adshao/go-binance/v2"
 )
@@ -31,20 +32,18 @@ func NewSpotClient() *Spot {
 	return &Spot{binance.NewClient(API_KEY, SECRET_KEY)}
 }
 
-func getSymbols(buyMap config.BuyCryptoMap) []string {
-	symbols := make([]string, 0, len(buyMap))
-	for k := range buyMap {
-		symbols = append(symbols, k)
+func getSymbols(buyMap config.BuyCryptoMap) (keys []string, orders map[string]*order) {
+	for symbol, amount := range buyMap {
+		orders[symbol] = &order{symbol: symbol, amount: amount}
+		keys = append(keys, symbol)
 	}
 
-	return symbols
+	return keys, orders
 }
 
 // 获取交易对的最小变动单位
-func (s *Spot) getSymbolsInfo(symbols ...string) (map[string]string, map[string]string) {
-	tickSizes := map[string]string{}
-	lotSizes := map[string]string{}
-	info, err := s.NewExchangeInfoService().Symbols(symbols...).Do(context.Background())
+func (s *Spot) getSymbolsInfo(keys []string, orders map[string]*order) {
+	info, err := s.NewExchangeInfoService().Symbols(keys...).Do(context.Background())
 	if err != nil {
 		log.Printf("Failed to get exchange info: %v", err)
 	}
@@ -54,38 +53,41 @@ func (s *Spot) getSymbolsInfo(symbols ...string) (map[string]string, map[string]
 			switch filter["filterType"].(string) {
 			case string(binance.SymbolFilterTypePriceFilter):
 				if i, ok := filter["tickSize"]; ok {
-					tickSizes[symbol.Symbol] = i.(string)
+					orders[symbol.Symbol].tickSize = i.(string)
 				}
 			case string(binance.SymbolFilterTypeLotSize):
 				if i, ok := filter["stepSize"]; ok {
-					lotSizes[symbol.Symbol] = i.(string)
+					orders[symbol.Symbol].lotSize = i.(string)
 				}
+			case string(binance.SymbolFilterTypeNotional):
+				if minNotional, ok := filter["minNotional"]; ok {
+					orders[symbol.Symbol].minNotional = minNotional.(string)
+				}
+
 			}
+
 		}
 	}
-	return tickSizes, lotSizes
 }
 
 // 获取交易对的最新买一价
-func (s *Spot) getBidPrices(symbols ...string) map[string]string {
-	bidPrices := map[string]string{}
-	info, err := s.NewListBookTickersService().Symbols(symbols...).Do(context.Background())
+func (s *Spot) getBidPrices(keys []string, orders map[string]*order) {
+	info, err := s.NewListBookTickersService().Symbols(keys...).Do(context.Background())
 	if err != nil {
 		log.Printf("Failed to get book tickers: %v", err)
 	}
 	for _, ticker := range info {
-		bidPrices[ticker.Symbol] = ticker.BidPrice
+		orders[ticker.Symbol].bidPrice = ticker.BidPrice
 	}
-	return bidPrices
 }
 
-func (s *Spot) doByCrypto(symbol, tickSize, lotSize, bidPrice string, amount float64) {
+func (s *Spot) doByCrypto(o *order) {
 	retries := 0.0
 	for {
 		// 下单逻辑
-		roundedPrice, roundedQuantity := tools.RoundPriceAndQuantity(amount, bidPrice, tickSize, lotSize, retries)
-		order, err := s.NewCreateOrderService().
-			Symbol(symbol).
+		roundedPrice, roundedQuantity := tools.RoundPriceAndQuantity(o.amount, o.BidPrice(), o.TickSize(), o.LotSize(), o.MinNotional(), retries)
+		border, err := s.NewCreateOrderService().
+			Symbol(o.symbol).
 			Side(binance.SideTypeBuy).
 			Type(binance.OrderTypeLimitMaker).
 			Price(roundedPrice).
@@ -94,32 +96,59 @@ func (s *Spot) doByCrypto(symbol, tickSize, lotSize, bidPrice string, amount flo
 		retries++
 
 		if err != nil {
-			log.Printf("Round %.0f: Failed to buy %s at price %s, quantity %s: %v", retries, symbol, roundedPrice, roundedQuantity, err)
+			log.Printf("Round %.0f: Failed to buy %s at price %s, quantity %s: %v", retries, o.symbol, roundedPrice, roundedQuantity, err)
 		} else {
-			log.Printf("Round %.0f: Successfully buy %s at price %s, quantity %s, order ID: %d", retries, symbol, roundedPrice, roundedQuantity, order.OrderID)
+			log.Printf("Round %.0f: Successfully buy %s at price %s, quantity %s, order ID: %d", retries, o.symbol, roundedPrice, roundedQuantity, border.OrderID)
 			break
 		}
 
 		if retries >= MAX_RETRIES {
-			log.Printf("Max retries reached for %s", symbol)
+			log.Printf("Max retries reached for %s", o.symbol)
 			break
 		}
 	}
 }
 
+type order struct {
+	symbol      string
+	amount      float64
+	tickSize    string
+	lotSize     string
+	bidPrice    string
+	minNotional string
+}
+
+func (o order) MinNotional() float64 {
+	return o.ParseFloat(o.minNotional)
+}
+func (o order) BidPrice() float64 {
+	return o.ParseFloat(o.bidPrice)
+}
+func (o order) TickSize() float64 {
+	return o.ParseFloat(o.tickSize)
+}
+func (o order) LotSize() float64 {
+	return o.ParseFloat(o.lotSize)
+}
+
+func (o order) ParseFloat(fs string) float64 {
+	f, _ := strconv.ParseFloat(fs, 64)
+	return f
+}
+
 func (s *Spot) BuyCrypto(buyMap config.BuyCryptoMap) {
 	var (
-		symbols             = getSymbols(buyMap)
-		tickSizes, lotSizes = s.getSymbolsInfo(symbols...)
-		bidPrices           = s.getBidPrices(symbols...)
+		keys, orders = getSymbols(buyMap)
 	)
+	s.getSymbolsInfo(keys, orders)
+	s.getBidPrices(keys, orders)
 
 	c := make(chan struct{}, len(buyMap))
-	for symbol, amount := range buyMap {
-		go func(symbol string, amount float64) {
-			s.doByCrypto(symbol, tickSizes[symbol], lotSizes[symbol], bidPrices[symbol], amount)
+	for _, o := range orders {
+		go func(_order *order) {
+			s.doByCrypto(_order)
 			c <- struct{}{}
-		}(symbol, amount)
+		}(o)
 	}
 
 	for i := 0; i < len(buyMap); i++ {
