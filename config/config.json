@@ -1,23 +1,24 @@
 {
     "max_retries": 15.0,
     "tick_size_power": 1.05,
-    "pre_order": {
-        "BTCFDUSD": 24.0,
-        "ETHFDUSD": 16.0,
-        "BNBFDUSD": 8.0,
-        "SOLFDUSD": 8.0,
-        "PAXGUSDT": 12.0,
-        "SUIFDUSD": 5.0,
-        "LINKFDUSD": 5.0,
-        "HBARFDUSD": 5.0,
-        "AVAXFDUSD": 5.0,
-        "XRPFDUSD": 5.0
-    },
-    "post_order": {
-        "BTCFDUSD": 24.0,
-        "ETHFDUSD": 16.0,
-        "BNBFDUSD": 8.0,
-        "SOLFDUSD": 8.0,
-        "PAXGUSDT": 12.0
-    }
+    "order_list": [
+        {
+            "time_at": "13:00:00",
+            "order": {
+                "BTCFDUSD": 18.0,
+                "ETHFDUSD": 12.0,
+                "BNBFDUSD": 6.0,
+                "SOLFDUSD": 6.0
+            }
+        },
+        {
+            "time_at": "15:30:00",
+            "order": {
+                "BTCFDUSD": 18.0,
+                "ETHFDUSD": 12.0,
+                "BNBFDUSD": 6.0,
+                "SOLFDUSD": 6.0
+            }
+        }
+    ]
 }

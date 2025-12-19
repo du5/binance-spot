@@ -1,3 +1,4 @@
 .env
 binance-spot
 .vscode
+config.json

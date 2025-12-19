@@ -30,12 +30,10 @@ func main() {
 		<-tc.C
 		now := time.Now()
 		h, m, s := now.Hour(), now.Minute(), now.Second()
-		if h == 13 && m == 0 && s == 0 {
-			Spot.BuyCrypto(config.Config.PreOrder)
-		}
-
-		if h == 15 && m == 30 && s == 0 {
-			Spot.BuyCrypto(config.Config.PostOrder)
+		for _, orderList := range config.Config.OrderLists {
+			if timeAt := orderList.Time(); h == timeAt.Hour() && m == timeAt.Minute() && s == timeAt.Second() {
+				Spot.BuyCrypto(orderList.Order)
+			}
 		}
 	}
 }

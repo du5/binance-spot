@@ -3,15 +3,28 @@ package config
 import (
 	_ "embed"
 	"encoding/json"
+	"time"
 )
 
 type BuyCryptoMap map[string]float64
 
+type OrderList struct {
+	TimeAt string       `json:"time_at"`
+	Order  BuyCryptoMap `json:"order"`
+}
+
 type config struct {
-	PostOrder     BuyCryptoMap `json:"post_order"`
-	PreOrder      BuyCryptoMap `json:"pre_order"`
-	MaxRetries    float64      `json:"max_retries"`
-	TickSizePower float64      `json:"tick_size_power"`
+	MaxRetries    float64     `json:"max_retries"`
+	TickSizePower float64     `json:"tick_size_power"`
+	OrderLists    []OrderList `json:"order_list"`
+}
+
+func (o OrderList) Time() time.Time {
+	parsedTime, err := time.Parse("15:04:00", o.TimeAt)
+	if err != nil {
+		panic(err)
+	}
+	return parsedTime
 }
 
 //go:embed config.json
@@ -23,5 +36,9 @@ func init() {
 	err := json.Unmarshal(_config, &Config)
 	if err != nil {
 		panic(err)
+	}
+
+	for _, orderList := range Config.OrderLists {
+		orderList.Time() // Validate time format
 	}
 }

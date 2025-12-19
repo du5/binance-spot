@@ -65,22 +65,20 @@ func (s *Spot) getSymbolsInfo(keys []string, orders map[string]*order) {
 
 	for _, symbol := range info.Symbols {
 		for _, filter := range symbol.Filters {
-			switch filter["filterType"].(string) {
-			case string(binance.SymbolFilterTypePriceFilter):
+			switch filter["filterType"].(binance.SymbolFilterType) {
+			case binance.SymbolFilterTypePriceFilter:
 				if i, ok := filter["tickSize"]; ok {
 					orders[symbol.Symbol].tickSize = i.(string)
 				}
-			case string(binance.SymbolFilterTypeLotSize):
+			case binance.SymbolFilterTypeLotSize:
 				if i, ok := filter["stepSize"]; ok {
 					orders[symbol.Symbol].lotSize = i.(string)
 				}
-			case string(binance.SymbolFilterTypeNotional):
+			case binance.SymbolFilterTypeNotional:
 				if minNotional, ok := filter["minNotional"]; ok {
 					orders[symbol.Symbol].minNotional = minNotional.(string)
 				}
-
 			}
-
 		}
 	}
 }

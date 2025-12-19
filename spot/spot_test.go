@@ -9,5 +9,5 @@ import (
 
 func TestBuyCrypto(t *testing.T) {
 	spotClient := NewSpotClient()
-	spotClient.BuyCrypto(config.Config.PreOrder)
+	spotClient.BuyCrypto(config.Config.OrderLists[0].Order)
 }
