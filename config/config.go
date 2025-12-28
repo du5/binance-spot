@@ -19,7 +19,7 @@ type config struct {
 	OrderLists    []OrderList `json:"order_list"`
 }
 
-func (o OrderList) Time() time.Time {
+func (o OrderList) time() time.Time {
 	parsedTime, err := time.Parse("15:04:00", o.TimeAt)
 	if err != nil {
 		panic(err)
@@ -39,6 +39,6 @@ func init() {
 	}
 
 	for _, orderList := range Config.OrderLists {
-		orderList.Time() // Validate time format
+		orderList.time() // Validate time format
 	}
 }

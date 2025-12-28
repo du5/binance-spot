@@ -28,10 +28,9 @@ func main() {
 	tc := time.NewTicker(time.Second)
 	for {
 		<-tc.C
-		now := time.Now()
-		h, m, s := now.Hour(), now.Minute(), now.Second()
+		now := time.Now().Format("15:04:05")
 		for _, orderList := range config.Config.OrderLists {
-			if timeAt := orderList.Time(); h == timeAt.Hour() && m == timeAt.Minute() && s == timeAt.Second() {
+			if orderList.TimeAt == now {
 				Spot.BuyCrypto(orderList.Order)
 			}
 		}
