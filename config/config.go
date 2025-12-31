@@ -3,6 +3,9 @@ package config
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
+	"log"
+	"strings"
 	"time"
 )
 
@@ -20,7 +23,7 @@ type config struct {
 }
 
 func (o OrderList) time() time.Time {
-	parsedTime, err := time.Parse("15:04:00", o.TimeAt)
+	parsedTime, err := time.Parse("15:04:05", o.TimeAt)
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +41,20 @@ func init() {
 		panic(err)
 	}
 
+	totalOrderAmount := 0.0
+	orderAmount := map[string]float64{}
 	for _, orderList := range Config.OrderLists {
-		orderList.time() // Validate time format
+		tt := orderList.time() // Validate time format
+		orders := []string{}
+		for k, v := range orderList.Order {
+			orders = append(orders, fmt.Sprintf("%s -> %.2f", k, v))
+			orderAmount[k] += v
+			totalOrderAmount += v
+		}
+		log.Printf("Order at %s: %s", tt.Format("15:04:05"), strings.Join(orders, ", "))
+	}
+	log.Printf("per day total order amount: %.2f", totalOrderAmount)
+	for k, v := range orderAmount {
+		log.Printf("per day total order amount: %s -> %.2f", k, v)
 	}
 }
