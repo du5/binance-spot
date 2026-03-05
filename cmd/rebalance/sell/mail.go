@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/adshao/go-binance/v2"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func init() {
