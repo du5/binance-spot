@@ -4,9 +4,11 @@ import (
 	"binance-spot/config"
 	"binance-spot/tools"
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/adshao/go-binance/v2"
 )
@@ -57,41 +59,50 @@ func getSymbols(buyMap config.BuyCryptoMap) (keys []string, orders map[string]*o
 }
 
 // 获取交易对的最小变动单位
-func (s *Spot) getSymbolsInfo(keys []string, orders map[string]*order) {
+func (s *Spot) getSymbolsInfo(keys []string, orders map[string]*order) error {
 	info, err := s.NewExchangeInfoService().Symbols(keys...).Do(context.Background())
 	if err != nil {
-		log.Printf("Failed to get exchange info: %v", err)
+		return fmt.Errorf("get exchange info: %w", err)
 	}
 
 	for _, symbol := range info.Symbols {
+		o, ok := orders[symbol.Symbol]
+		if !ok {
+			continue
+		}
 		for _, filter := range symbol.Filters {
-			switch filter["filterType"].(string) {
+			filterType, _ := filter["filterType"].(string)
+			switch filterType {
 			case string(binance.SymbolFilterTypePriceFilter):
-				if i, ok := filter["tickSize"]; ok {
-					orders[symbol.Symbol].tickSize = i.(string)
+				if v, ok := filter["tickSize"].(string); ok {
+					o.tickSize = v
 				}
 			case string(binance.SymbolFilterTypeLotSize):
-				if i, ok := filter["stepSize"]; ok {
-					orders[symbol.Symbol].lotSize = i.(string)
+				if v, ok := filter["stepSize"].(string); ok {
+					o.lotSize = v
 				}
 			case string(binance.SymbolFilterTypeNotional):
-				if minNotional, ok := filter["minNotional"]; ok {
-					orders[symbol.Symbol].minNotional = minNotional.(string)
+				if v, ok := filter["minNotional"].(string); ok {
+					o.minNotional = v
 				}
 			}
 		}
 	}
+	return nil
 }
 
 // 获取交易对的最新买一价
-func (s *Spot) getBidPrices(keys []string, orders map[string]*order) {
+func (s *Spot) getBidPrices(keys []string, orders map[string]*order) error {
 	info, err := s.NewListBookTickersService().Symbols(keys...).Do(context.Background())
 	if err != nil {
-		log.Printf("Failed to get book tickers: %v", err)
+		return fmt.Errorf("get book tickers: %w", err)
 	}
 	for _, ticker := range info {
-		orders[ticker.Symbol].bidPrice = ticker.BidPrice
+		if o, ok := orders[ticker.Symbol]; ok {
+			o.bidPrice = ticker.BidPrice
+		}
 	}
+	return nil
 }
 
 func (s *Spot) doByCrypto(o *order) {
@@ -150,21 +161,28 @@ func (o order) ParseFloat(fs string) float64 {
 }
 
 func (s *Spot) BuyCrypto(buyMap config.BuyCryptoMap) {
-	var (
-		keys, orders = getSymbols(buyMap)
-	)
-	s.getSymbolsInfo(keys, orders)
-	s.getBidPrices(keys, orders)
+	keys, orders := getSymbols(buyMap)
+	if err := s.getSymbolsInfo(keys, orders); err != nil {
+		log.Printf("Skip buying: %v", err)
+		return
+	}
+	if err := s.getBidPrices(keys, orders); err != nil {
+		log.Printf("Skip buying: %v", err)
+		return
+	}
 
-	c := make(chan struct{}, len(buyMap))
+	var wg sync.WaitGroup
 	for _, o := range orders {
-		go func(_order *order) {
-			s.doByCrypto(_order)
-			c <- struct{}{}
+		// 行情数据不完整时下单参数会产生除零/死循环,直接跳过
+		if o.TickSize() <= 0 || o.LotSize() <= 0 || o.BidPrice() <= 0 {
+			log.Printf("Skip %s: incomplete market data (tickSize=%q, lotSize=%q, bidPrice=%q)", o.symbol, o.tickSize, o.lotSize, o.bidPrice)
+			continue
+		}
+		wg.Add(1)
+		go func(o *order) {
+			defer wg.Done()
+			s.doByCrypto(o)
 		}(o)
 	}
-
-	for i := 0; i < len(buyMap); i++ {
-		<-c
-	}
+	wg.Wait()
 }

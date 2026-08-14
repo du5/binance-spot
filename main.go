@@ -31,7 +31,8 @@ func main() {
 		now := time.Now().Format("15:04:05")
 		for _, orderList := range config.Config.OrderLists {
 			if orderList.TimeAt == now {
-				Spot.BuyCrypto(orderList.Order)
+				// 异步执行,避免下单重试阻塞 ticker 而错过后续时间点
+				go Spot.BuyCrypto(orderList.Order)
 			}
 		}
 	}
