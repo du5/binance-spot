@@ -23,15 +23,15 @@ func init() {
 	if API_KEY == "" || SECRET_KEY == "" {
 		log.Fatal("API_KEY or SECRET_KEY is not set in environment variables")
 	}
-
 }
 
 type Spot struct {
 	*binance.Client
+	tradeMu sync.Mutex
 }
 
 func NewSpotClient() *Spot {
-	return &Spot{binance.NewClient(API_KEY, SECRET_KEY)}
+	return &Spot{Client: binance.NewClient(API_KEY, SECRET_KEY)}
 }
 
 func (s *Spot) TestClient() {
@@ -106,23 +106,21 @@ func (s *Spot) getBidPrices(keys []string, orders map[string]*order) error {
 }
 
 func (s *Spot) doByCrypto(o *order) {
+	estimatedPrice, roundedQuantity := tools.RoundPriceAndQuantity(o.amount, o.BidPrice(), o.TickSize(), o.LotSize(), o.MinNotional(), 0)
 	retries := 0.0
 	for {
-		// 下单逻辑
-		roundedPrice, roundedQuantity := tools.RoundPriceAndQuantity(o.amount, o.BidPrice(), o.TickSize(), o.LotSize(), o.MinNotional(), retries)
 		border, err := s.NewCreateOrderService().
 			Symbol(o.symbol).
 			Side(binance.SideTypeBuy).
-			Type(binance.OrderTypeLimitMaker).
-			Price(roundedPrice).
+			Type(binance.OrderTypeMarket).
 			Quantity(roundedQuantity).
 			Do(context.Background())
 		retries++
 
 		if err != nil {
-			log.Printf("Round %.0f: Failed to buy %s at price %s, quantity %s: %v", retries, o.symbol, roundedPrice, roundedQuantity, err)
+			log.Printf("Round %.0f: Failed to market buy %s, quantity %s (estimated price %s): %v", retries, o.symbol, roundedQuantity, estimatedPrice, err)
 		} else {
-			log.Printf("Round %.0f: Successfully buy %s at price %s, quantity %s, order ID: %d", retries, o.symbol, roundedPrice, roundedQuantity, border.OrderID)
+			log.Printf("Round %.0f: Successfully market bought %s, quantity %s, order ID: %d", retries, o.symbol, roundedQuantity, border.OrderID)
 			break
 		}
 
@@ -161,6 +159,9 @@ func (o order) ParseFloat(fs string) float64 {
 }
 
 func (s *Spot) BuyCrypto(buyMap config.BuyCryptoMap) {
+	s.tradeMu.Lock()
+	defer s.tradeMu.Unlock()
+
 	keys, orders := getSymbols(buyMap)
 	if err := s.getSymbolsInfo(keys, orders); err != nil {
 		log.Printf("Skip buying: %v", err)

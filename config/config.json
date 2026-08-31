@@ -1,23 +1,91 @@
 {
     "max_retries": 15.0,
     "tick_size_power": 1.05,
+    "schedules": [
+        "0 12  * * 2"
+    ],
     "order_list": [
         {
-            "time_at": "13:00:00",
+            "time_at": "00:00:00",
             "order": {
-                "BTCFDUSD": 18.0,
-                "ETHFDUSD": 12.0,
-                "BNBFDUSD": 6.0,
-                "SOLFDUSD": 6.0
+                "BTCUSDT": 5.0,
+                "ETHUSDT": 5.0,
+                "BNBUSDT": 5.0,
+                "SOLUSDT": 5.0
             }
         },
         {
-            "time_at": "15:30:00",
+            "time_at": "03:25:42",
             "order": {
-                "BTCFDUSD": 18.0,
-                "ETHFDUSD": 12.0,
-                "BNBFDUSD": 6.0,
-                "SOLFDUSD": 6.0
+                "BTCUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "04:48:00",
+            "order": {
+                "ETHUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "06:51:25",
+            "order": {
+                "BTCUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "08:00:00",
+            "order": {
+                "BNBUSDT": 5.0,
+                "SOLUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "09:36:00",
+            "order": {
+                "ETHUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "10:17:08",
+            "order": {
+                "BTCUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "13:42:51",
+            "order": {
+                "BTCUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "14:24:00",
+            "order": {
+                "ETHUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "16:00:00",
+            "order": {
+                "BNBUSDT": 5.0,
+                "SOLUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "17:08:34",
+            "order": {
+                "BTCUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "19:12:00",
+            "order": {
+                "ETHUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "20:34:17",
+            "order": {
+                "BTCUSDT": 5.0
             }
         }
     ]

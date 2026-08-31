@@ -19,7 +19,20 @@ type OrderList struct {
 type config struct {
 	MaxRetries    float64     `json:"max_retries"`
 	TickSizePower float64     `json:"tick_size_power"`
+	Schedules     []string    `json:"schedules"`
 	OrderLists    []OrderList `json:"order_list"`
+}
+
+// TargetAllocations returns the configured amount per symbol across all daily
+// orders. Rebalancing uses these amounts as relative target weights.
+func TargetAllocations() BuyCryptoMap {
+	targets := make(BuyCryptoMap)
+	for _, orderList := range Config.OrderLists {
+		for symbol, amount := range orderList.Order {
+			targets[symbol] += amount
+		}
+	}
+	return targets
 }
 
 func (o OrderList) time() time.Time {
@@ -55,6 +68,6 @@ func init() {
 	}
 	log.Printf("per day total order amount: %.2f", totalOrderAmount)
 	for k, v := range orderAmount {
-		log.Printf("per day total order amount: %s -> %.2f", k, v)
+		log.Printf("per day total order amount: %s -> %.2f (target %.2f%%)", k, v, v/totalOrderAmount*100)
 	}
 }

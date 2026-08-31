@@ -7,6 +7,7 @@ import (
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/robfig/cron/v3"
 )
 
 var (
@@ -25,7 +26,25 @@ func init() {
 
 func main() {
 	log.Printf("NewYork time is %s now.", time.Now().Format("2006-01-02 15:04:05"))
+
+	rebalanceTargets := config.TargetAllocations()
+	rebalanceCron := cron.New(
+		cron.WithLocation(time.Local),
+		cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)),
+	)
+	for _, schedule := range config.Config.Schedules {
+		if _, err := rebalanceCron.AddFunc(schedule, func() {
+			Spot.Rebalance(rebalanceTargets)
+		}); err != nil {
+			log.Fatalf("Invalid rebalance schedule %q: %v", schedule, err)
+		}
+		log.Printf("Portfolio rebalance scheduled: %s", schedule)
+	}
+	rebalanceCron.Start()
+	defer rebalanceCron.Stop()
+
 	tc := time.NewTicker(time.Second)
+	defer tc.Stop()
 	for {
 		<-tc.C
 		now := time.Now().Format("15:04:05")
