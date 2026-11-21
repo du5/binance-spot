@@ -1,0 +1,87 @@
+{
+    "max_retries": 15.0,
+    "tick_size_power": 1.05,
+    "schedules": [
+        "0 12  * * 2"
+    ],
+    "keep": [
+        "SOL",
+        "BNB"
+    ],
+    "order_list": [
+        {
+            "time_at": "00:00:00",
+            "order": {
+                "BTCUSDT": 5.0,
+                "ETHUSDT": 5.0,
+                "XAUTUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "03:25:42",
+            "order": {
+                "BTCUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "04:48:00",
+            "order": {
+                "ETHUSDT": 5.0,
+                "XAUTUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "06:51:25",
+            "order": {
+                "BTCUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "09:36:00",
+            "order": {
+                "ETHUSDT": 5.0,
+                "XAUTUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "10:17:08",
+            "order": {
+                "BTCUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "13:42:51",
+            "order": {
+                "BTCUSDT": 5.0,
+                "XAUTUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "14:24:00",
+            "order": {
+                "ETHUSDT": 5.0,
+                "XAUTUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "17:08:34",
+            "order": {
+                "BTCUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "19:12:00",
+            "order": {
+                "ETHUSDT": 5.0,
+                "XAUTUSDT": 5.0
+            }
+        },
+        {
+            "time_at": "20:34:17",
+            "order": {
+                "BTCUSDT": 5.0,
+                "XAUTUSDT": 5.0
+            }
+        }
+    ]
+}
