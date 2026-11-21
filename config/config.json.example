@@ -4,14 +4,17 @@
     "schedules": [
         "0 12  * * 2"
     ],
+    "keep": [
+        "SOL",
+        "BNB"
+    ],
     "order_list": [
         {
             "time_at": "00:00:00",
             "order": {
                 "BTCUSDT": 5.0,
                 "ETHUSDT": 5.0,
-                "BNBUSDT": 5.0,
-                "SOLUSDT": 5.0
+                "XAUTUSDT": 5.0
             }
         },
         {
@@ -23,7 +26,8 @@
         {
             "time_at": "04:48:00",
             "order": {
-                "ETHUSDT": 5.0
+                "ETHUSDT": 5.0,
+                "XAUTUSDT": 5.0
             }
         },
         {
@@ -33,16 +37,10 @@
             }
         },
         {
-            "time_at": "08:00:00",
-            "order": {
-                "BNBUSDT": 5.0,
-                "SOLUSDT": 5.0
-            }
-        },
-        {
             "time_at": "09:36:00",
             "order": {
-                "ETHUSDT": 5.0
+                "ETHUSDT": 5.0,
+                "XAUTUSDT": 5.0
             }
         },
         {
@@ -54,20 +52,15 @@
         {
             "time_at": "13:42:51",
             "order": {
-                "BTCUSDT": 5.0
+                "BTCUSDT": 5.0,
+                "XAUTUSDT": 5.0
             }
         },
         {
             "time_at": "14:24:00",
             "order": {
-                "ETHUSDT": 5.0
-            }
-        },
-        {
-            "time_at": "16:00:00",
-            "order": {
-                "BNBUSDT": 5.0,
-                "SOLUSDT": 5.0
+                "ETHUSDT": 5.0,
+                "XAUTUSDT": 5.0
             }
         },
         {
@@ -79,13 +72,15 @@
         {
             "time_at": "19:12:00",
             "order": {
-                "ETHUSDT": 5.0
+                "ETHUSDT": 5.0,
+                "XAUTUSDT": 5.0
             }
         },
         {
             "time_at": "20:34:17",
             "order": {
-                "BTCUSDT": 5.0
+                "BTCUSDT": 5.0,
+                "XAUTUSDT": 5.0
             }
         }
     ]

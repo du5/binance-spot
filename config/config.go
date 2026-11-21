@@ -20,6 +20,7 @@ type config struct {
 	MaxRetries    float64     `json:"max_retries"`
 	TickSizePower float64     `json:"tick_size_power"`
 	Schedules     []string    `json:"schedules"`
+	Keep          []string    `json:"keep"`
 	OrderLists    []OrderList `json:"order_list"`
 }
 
@@ -43,7 +44,24 @@ func (o OrderList) time() time.Time {
 	return parsedTime
 }
 
-//go:embed config.json
+// keep 中的资产为长期持有:不得出现在 order_list(不买入),再平衡也不会考虑它们(不卖出)
+func validateKeep(keep []string, orderLists []OrderList) error {
+	for _, kept := range keep {
+		if kept == "" {
+			continue
+		}
+		for _, orderList := range orderLists {
+			for symbol := range orderList.Order {
+				if strings.HasPrefix(symbol, kept) {
+					return fmt.Errorf("kept asset %q must not appear in order_list, found symbol %q", kept, symbol)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+//go:embed config.json.example
 var _config []byte
 
 var Config config
@@ -51,6 +69,10 @@ var Config config
 func init() {
 	err := json.Unmarshal(_config, &Config)
 	if err != nil {
+		panic(err)
+	}
+
+	if err := validateKeep(Config.Keep, Config.OrderLists); err != nil {
 		panic(err)
 	}
 
