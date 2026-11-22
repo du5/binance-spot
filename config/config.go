@@ -61,7 +61,7 @@ func validateKeep(keep []string, orderLists []OrderList) error {
 	return nil
 }
 
-//go:embed config.json.example
+//go:embed config.json
 var _config []byte
 
 var Config config
